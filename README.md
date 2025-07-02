@@ -8,7 +8,7 @@
 
 ## **環境需求**
 
-1. python tkinter, selenium, pillow, tkcalendar
-   ```
-   pip install selenium pillow tkcalendar
-   ```
+1. 需先安裝 tkinter, selenium, pillow, tkcalendar
+```
+pip install selenium pillow tkcalendar
+```
