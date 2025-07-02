@@ -8,7 +8,7 @@
 
 ## **環境需求**
 
-1. 需先安裝 tkinter, selenium, pillow, tkcalendar
+1. 需先安裝 tkinter, selenium, pillow, tkcalendar (tkinter通常是Python預設安裝的一部分)
 ```
 pip install selenium pillow tkcalendar
 ```
