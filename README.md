@@ -5,3 +5,10 @@
 ## **功能**
 
 結合師大社團場地系統與台大球場預約系統，透過電腦排程與自動化輸入，幫助使用者提升借場地的效率與成功率。
+
+## **環境需求**
+
+1. python tkinter, selenium, pillow, tkcalendar
+   ```
+   pip install selenium pillow tkcalendar
+   ```
