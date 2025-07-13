@@ -1,23 +1,30 @@
 import calendar
+
 import tkinter as tk
 import tkinter.font as tkFont
 import tkinter.ttk as ttk
+
 import time
 import datetime
+
 import pytesseract
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from PIL import Image
+
 from tkcalendar import DateEntry, Calendar
 from tkinter import messagebox
 from tkinter import *
+
 from selenium import webdriver
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
-s = Service('./chromedriver')
-driver = webdriver.Chrome(service=s)
+
+service = Service(ChromeDriverManager().install())
+driver = webdriver.Chrome(service=service)
 
 '''
 回傳值列表:
@@ -42,25 +49,30 @@ driver = webdriver.Chrome(service=s)
 # 師大帳號密碼、借場資訊字典
 ntnu_dict = {"帳號" : "", "密碼" : "", "社團活動" : "", "場地類別名稱" : "", "場地名稱" : "", "預約日期" : "", "開始時間" : "", "結束時間" : "", "check" : False }
 # 獲取現在年月日，方便日期選擇
-datetime = calendar.datetime.datetime
-current_year = datetime.now().year
-current_month = datetime.now().month
-current_day = datetime.now().day
-    
+now = datetime.now()
+current_year = now.year
+current_month = now.month
+current_day = now.day
 
 # 選擇台大或是師大系統頁面
 class select_system_page(tk.Frame):
     
+    # 建構子
     def __init__(self):
         tk.Frame.__init__(self)
         self.grid()
         self.master.title("借場小幫手")
         self.create_widget()
 
+    # 建立介面元件
     def create_widget(self):
         f2 = tkFont.Font(size = 30, family = "Georgia")
-        self.ntuBtn = tk.Button(self, text='台大預約球場系統', command = self.clickBtnNTU, font=f2).grid(row=0, column=0)
-        self.ntnuBtn = tk.Button(self, text='師大社團場地系統', command = self.clickBtnNTNU, font=f2).grid(row=1, column=0)
+        btn = tk.Button(self, text='台大預約球場系統', command=self.clickBtnNTU, font=f2)
+        btn.grid(row=0, column=0)
+        self.ntuBtn = btn
+        btn = tk.Button(self, text='師大社團場地系統', command=self.clickBtnNTNU, font=f2)
+        btn.grid(row=1, column=0)
+        self.ntnuBtn = btn
 
     # 點選台大系統
     def clickBtnNTU(self):
@@ -77,7 +89,7 @@ class select_system_page(tk.Frame):
         select_system = "NTNU"
         NTNU_system_page()
 
-
+# 模擬登入台大球場預約系統的動作
 def ntu_login_id():
     if NTU_account_dict['ID'] == '眷屬/校友/校外':
         driver.find_element(By.XPATH, "//*[@id=\"__tab_ctl00_ContentPlaceHolder1_tcTab_TabPanel3\"]").click()
@@ -109,8 +121,6 @@ def ntu_check_login():
     else:
         return False
 
-
-
 # 選擇身分別頁面
 class NTU_system_page(tk.Frame):
     # 台大帳號密碼資料儲存字典:
@@ -131,7 +141,7 @@ class NTU_system_page(tk.Frame):
         self.ID_Label = tk.Label(self, text='身分選擇：', font=f1)
         self.ID_Label.grid(row=0, column=0, sticky='w')
         # 在 (0, 1) 的位置建立一個選擇 身分別 的下拉式選單
-        IDLst = ['學生', '教職員', '眷屬/校友/校外']        
+        IDLst = ['學生', '教職員', '眷屬/校友/校外']
         self.ID_entry = ttk.Combobox(self, values=IDLst, font=f2)
         self.ID_entry.grid(row=0, column=1, sticky = tk.NE + tk.SW)
         self.ID_entry.current(0)
@@ -139,6 +149,7 @@ class NTU_system_page(tk.Frame):
         # 在 (1, 0) 的位置建立一個會顯示 '會員帳號' 的文字區塊
         self.account_Label = tk.Label(self, text='會員帳號：', font=f1)
         self.account_Label.grid(row=1, column=0, sticky='w')
+        
         # 在 (1, 1) 的位置建立一個輸入 會員帳號 的欄位
         self.account_entry = tk.Entry(self, width=15, font=f2)
         self.account_entry.grid(row=1, column=1, sticky = tk.NE + tk.SW)
@@ -146,19 +157,22 @@ class NTU_system_page(tk.Frame):
         # 在 (2, 0) 的位置建立一個會顯示 '會員密碼' 的文字區塊
         self.password_Label = tk.Label(self, text='會員密碼：', font=f1)
         self.password_Label.grid(row=2, column=0, sticky='w')
+        
         # 在 (2, 1) 的位置建立一個輸入 會員密碼 的欄位
         self.password_entry = tk.Entry(self, width=15, font=f2, show='*')
         self.password_entry.grid(row=2, column=1, sticky = tk.NE + tk.SW)
 
-        # 在 (3, 0) 的位置建立一個'回上一頁'的按鈕，
-        # 按鈕按下後會跳回 select_system_page
-        self.back = tk.Button(self, text="回上一頁", font=f2, bg="silver", command = self.clickBtnBack)
-        self.back.grid(row=3, column=1, sticky = 'W')
+        # 建一個框架 frame 放在 grid 的格子中
+        button_frame = tk.Frame(self)
+        button_frame.grid(row=3, column=1)
 
-        # 在 (3, 1) 的位置建立一個'確認'的按鈕，
-        # 按鈕按下後會執行 login() 函式
-        self.verify = tk.Button(self, text="確認", font=f2, bg="silver", command = self.login)
-        self.verify.grid(row=3, column=1)
+        # 在 frame 裡放「回上一頁」按鈕，靠左
+        self.back = tk.Button(button_frame, text="回上一頁", font=f2, bg="silver", command=self.clickBtnBack)
+        self.back.pack(side=tk.LEFT, padx=5)
+
+        # 在 frame 裡放「確認」按鈕，靠右
+        self.verify = tk.Button(button_frame, text="確認", font=f2, bg="silver", command=self.login)
+        self.verify.pack(side=tk.LEFT, padx=5)
 
     # 回上一頁
     # 跳回select_system_page 並消除此視窗
@@ -202,7 +216,7 @@ class NTU_system_page(tk.Frame):
                         self.master.destroy()
                         court_entry_page()
 
-    # 出現錯誤的彈跳視窗
+    # 出現錯誤的彈跳視窗，title 在 mac 不會出現
     def error_page(self, error_message):
         self.error = tk.messagebox.showerror(title="錯誤訊息", message=error_message)
 
@@ -329,7 +343,6 @@ class court_entry_page(tk.Frame):
         self.BtnDate.destroy()
         # 出現日期選擇器
         self.calendar_window()
-    
 
     # 日期選擇器
     def calendar_window(self):
@@ -359,6 +372,7 @@ class court_entry_page(tk.Frame):
             self.select_day = '0' + select_date[1]
         else:
             self.select_day = select_date[1]
+        
         datestr = self.select_year + '/' + self.select_month + '/' + self.select_day
         self.dateLabel = tk.Label(self, text=datestr, font=f1)
         self.dateLabel.grid(row=3, column=1, columnspan = 3, sticky = "w")
@@ -373,15 +387,15 @@ class court_entry_page(tk.Frame):
         self.clickBtnDate()
 
 
-     # 按下確認按鈕
+    # 按下確認按鈕
     def login(self):
-        # 檢查申請場地
         try:
             self.email_entry.get()[0]
             NTU_court_dict['email'] = self.email_entry.get()
         except:
             self.error_page("請填寫Email")
         else:
+            # 檢查申請場地
             try:
                 self.court_entry.get()[0]
                 NTU_court_dict['court'] = self.court_entry.get()
@@ -432,7 +446,6 @@ class court_entry_page(tk.Frame):
                                     self.error_page("請選擇場地數量")
                                 else:
                                     # 檢查付款方式是否空白
-                                    self.payment.get()[0]
                                     try:
                                         self.payment.get()[0]
                                         NTU_court_dict['payment_method'] = self.payment.get()
@@ -469,7 +482,7 @@ class court_entry_page(tk.Frame):
             show_result_string = '很抱歉，您沒有成功預約到場地'
             self.result = tk.messagebox.showinfo(title='預約場地結果', message=show_result_string)       
 
-
+###########################################################################################################
 
 # 師大系統頁面: 僅能借社團場地
 class NTNU_system_page(tk.Frame):
@@ -480,7 +493,7 @@ class NTNU_system_page(tk.Frame):
         self.NTNU_system()
     
     def NTNU_system(self):
-        f1 = tkFont.Font(size = 20, family = 'Georgia')
+        f1 = tkFont.Font(size = 20, family = "Georgia")
         f2 = tkFont.Font(size = 15, family = "Georgia")
         
         # 在 (0, 0) 的位置建立一個會顯示 '帳號' 的文字區塊
@@ -495,15 +508,18 @@ class NTNU_system_page(tk.Frame):
         self.entry1 = tk.Entry(self, width=15, font=f2, show='*')
         self.entry1.grid(row=1, column=1)
         
-        # 在 (2, 0) 的位置建立一個'回上一頁'的按鈕，
+        button_frame2 = tk.Frame(self)
+        button_frame2.grid(row=3, column=1)
+
+        # 在 (3, 1) 的位置建立一個'回上一頁'的按鈕，
         # 按鈕按下後會跳回 select_system_page
-        self.back = tk.Button(self, text="回上一頁", font=f2, bg="silver", command = self.clickBtnBack)
-        self.back.grid(row=2, column=0, sticky = 'W')
-        
-        # 在 (2, 1) 的位置建立一個確認的按鈕，
+        self.back2 = tk.Button(button_frame2, text="回上一頁", font=f2, bg="silver", command=self.clickBtnBack)
+        self.back2.pack(side=tk.LEFT, padx=5)
+
+        # 在 (3, 1) 的位置建立一個確認的按鈕，
         # 按鈕按下後會執行 login() 函式
-        self.verify = tk.Button(self, text="確認", font=f2, bg="silver", command = self.login)
-        self.verify.grid(row=2, column=1, columnspan=2)
+        self.verify2 = tk.Button(button_frame2, text="確認", font=f2, bg="silver", command=self.login)
+        self.verify2.pack(side=tk.LEFT, padx=5)
     
     # 回上一頁
     # 跳回select_system_page 並消除此視窗
@@ -589,8 +605,6 @@ class ntnu_info_page(tk.Frame):
         def store_end(*args):
             ntnu_dict["結束時間"] = var4.get()
         
-        # 在 (0, 0) 的位置建立一個會顯示 社團活動 的文字區塊
-        self.Label0 = tk.Label(self, text='社團活動：', font=f1)
         # 在 (0, 0) 的位置建立一個會顯示 社團活動 的文字區塊
         self.Label0 = tk.Label(self, text='社團活動：', font=f1)
         self.Label0.grid(row=0, column=0, sticky='w')
@@ -702,6 +716,7 @@ class ntnu_info_page(tk.Frame):
             ntnu_dict["社團活動"] = self.entry0.get()
             ntnu_dict["check"] = True 
             self.master.destroy()
+            ntnu_book(ntnu_dict)   # 執行師大預約
     
     # 出現錯誤的彈跳視窗
     def error_page(self, error_message):
@@ -776,16 +791,19 @@ def ntu_book():
             return False
 
     def send_information():
+        # 填寫電子郵件
         email_input = driver.find_element(By.XPATH, "//*[@id=\"ctl00_ContentPlaceHolder1_txtEmail\"]")
         email_input.clear()
         email_input.send_keys(NTU_court_dict['email'])
 
+        # 選擇付款方式
         selectpayment = Select(driver.find_element(By.NAME, "ctl00$ContentPlaceHolder1$DropLstPayMethod"))
         selectpayment.select_by_visible_text(NTU_court_dict['payment_method'])
         if NTU_court_dict['payment_method'] == "時數券": # 時數卷時輸入收據編號
             receipt_number = driver.find_element(By.XPATH, "//*[@id=\"ctl00_ContentPlaceHolder1_txtpayHourNum\"]")
             receipt_number.clear()
             receipt_number.send_keys(NTU_court_dict['receipt'])
+        
         select_endtime = Select(driver.find_element(By.NAME, "ctl00$ContentPlaceHolder1$DropLstTimeEnd"))
         select_endtime.select_by_visible_text(NTU_court_dict['end_time'])
 
@@ -793,6 +811,7 @@ def ntu_book():
         court_number.clear()
         court_number.send_keys(NTU_court_dict['court_num'])
 
+    # 驗證碼輸入，它會等待用戶手動輸入驗證碼，然後將用戶輸入的驗證碼填入網頁中的對應欄位
     def send_vaildatecode():
         testinput = input()
         vaildatecode = driver.find_element(By.XPATH, "//*[@id=\"ctl00_ContentPlaceHolder1_txtValidateCode\"]")
@@ -919,6 +938,7 @@ def ntu_schedule_book():
     return ntu_book()
 
 
+# 師大球場預約後端
 def ntnu_book(ntnu_dict):
     if ntnu_dict["check"] == True:
         # 連到網站
@@ -989,4 +1009,3 @@ def ntnu_book(ntnu_dict):
 rent = select_system_page()
 rent.master.title("借場小幫手")  # 標題設定
 rent.mainloop()
-ntnu_book(ntnu_dict)
